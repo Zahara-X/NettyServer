@@ -9,11 +9,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import org.example.keyboard.KeyboardMap;
+import org.example.connected.ConnectedPlayer;
+import org.example.editions.PlayedRenderer;
 
 import javax.swing.*;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
+    public static Map<Integer, PlayedRenderer> players = new ConcurrentHashMap<>();
     public static ChannelGroup group = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     public Server(int port) {
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
@@ -26,7 +30,7 @@ public class Server {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
-                            ch.pipeline().addLast(new KeyboardMap());
+                            ch.pipeline().addLast(new ConnectedPlayer());
                         }
                     });
             ChannelFuture factory = b.bind(port).sync();

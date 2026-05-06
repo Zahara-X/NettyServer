@@ -41,7 +41,7 @@ public class PlayedRenderer {
         buffer.writeInt(cameraX);
         buffer.writeInt(cameraY);
         buffer.writeInt(ctx.channel().hashCode());
-        ctx.writeAndFlush(buffer);
+        Server.group.writeAndFlush(buffer);
     }
     public void cameraMap(ChannelHandlerContext ctx, ByteBuf buf) {
         while (buf.isReadable()) {
