@@ -16,7 +16,7 @@ public class PlayedRenderer {
             Arrays.fill(ints, 1);
         }
     }
-    public void _00000021230032130_(ChannelHandlerContext ctx) {
+    public void _1111212_map_(ChannelHandlerContext ctx) {
         int w = grid.length;
         int h = grid[0].length;
         int size = 150;

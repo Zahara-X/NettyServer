@@ -1,14 +1,12 @@
 package org.example.connected;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.example.Server;
 import org.example.editions.PlayedRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 
 public class ConnectedPlayer extends SimpleChannelInboundHandler<ByteBuf> {
@@ -22,17 +20,8 @@ public class ConnectedPlayer extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         this.renderer = new PlayedRenderer();
-        id = (int)(1 + Math.random() * 200);
-        this.renderer.spawnPlayer(ctx, id);
-        for(Map.Entry<Integer, PlayedRenderer> players : Server.players.entrySet()) {
-            if(players.getKey() != id) {
-                players.getValue().spawnPlayer(ctx, id);
-            }
-        }
-        Server.players.put(id, this.renderer);
-        Server.group.add(ctx.channel());
-        renderer._00000021230032130_(ctx);
-        logger.info("Player connected: {}", id);
+        _0100101001_spawn_(ctx, this.renderer);
+        logger.info("Player connected - id: {}", id);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
@@ -44,7 +33,25 @@ public class ConnectedPlayer extends SimpleChannelInboundHandler<ByteBuf> {
         buf.writeInt(16);
         buf.writeInt(id);
         Server.group.writeAndFlush(buf);
-        logger.info("Player disconnected: {}", id);
+        logger.info("Player disconnected - id: {}", id);
     }
-
+    public void _0100101001_spawn_(ChannelHandlerContext ctx, PlayedRenderer renderer) {
+        id = (int) (1 + Math.random() * 200); // ид начинается от 1 до 200
+        // Добавляем игрока в список map, у каждого уникален ид, желательно использовать UUID, но для практики временно сойдет.
+        renderer.spawnPlayer(ctx, id);
+        // Добавляем в список!
+        Server.players.put(id, renderer);
+        for(Map.Entry<Integer, PlayedRenderer> entry : Server.players.entrySet()) {
+            if(entry.getKey() != id) { // Предотвращаем создавать старого игрока
+                renderer.spawnPlayer(ctx, id);
+            }
+        }
+        /// Добавляем игроков в группу
+        Server.group.add(ctx.channel());
+        /// Добавляем карту, карта общая
+        renderer._1111212_map_(ctx);
+    }
+    public void _00020120_remove_(ChannelHandlerContext ctx, int drop) {
+        Server.players.remove(drop); // Дропаем игрока из списка
+    }
 }
