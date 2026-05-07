@@ -14,29 +14,37 @@ import java.util.Map;
 public class ConnectedPlayer extends SimpleChannelInboundHandler<ByteBuf> {
     private static Logger logger = LoggerFactory.getLogger(ConnectedPlayer.class);
     private PlayedRenderer renderer;
+    private int id;
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-        renderer.cameraMap(ctx, msg);
+        renderer.cameraMap(ctx, msg, id);
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         this.renderer = new PlayedRenderer();
+        id = (int)(1 + Math.random() * 200);
+        this.renderer.spawnPlayer(ctx, id);
         for(Map.Entry<Integer, PlayedRenderer> players : Server.players.entrySet()) {
-            if(players.getKey() != ctx.channel().hashCode()) {
-                players.getValue().spawnPlayer(ctx);
+            if(players.getKey() != id) {
+                players.getValue().spawnPlayer(ctx, id);
             }
         }
-        Server.players.put(ctx.channel().hashCode(), this.renderer);
+        Server.players.put(id, this.renderer);
         Server.group.add(ctx.channel());
-        this.renderer.spawnPlayer(ctx);
         renderer._00000021230032130_(ctx);
-        logger.info("Player connected: {}", ctx.channel().hashCode());
+        logger.info("Player connected: {}", id);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        Server.players.remove(ctx.channel().hashCode());
+        Server.players.remove(id);
         Server.group.remove(ctx.channel());
-        logger.info("Player disconnected: {}", ctx.channel().hashCode());
+        int length = 8;
+        ByteBuf buf = ctx.alloc().buffer(length + 4);
+        buf.writeInt(length);
+        buf.writeInt(16);
+        buf.writeInt(id);
+        Server.group.writeAndFlush(buf);
+        logger.info("Player disconnected: {}", id);
     }
 
 }
