@@ -10,29 +10,23 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class ConnectedPlayer extends SimpleChannelInboundHandler<ByteBuf> {
-    private static Logger logger = LoggerFactory.getLogger(ConnectedPlayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConnectedPlayer.class);
     private PlayedRenderer renderer;
     private int id;
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
         renderer.cameraMap(ctx, msg, id);
     }
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) {
         this.renderer = new PlayedRenderer();
         _0100101001_spawn_(ctx, this.renderer);
         logger.info("Player connected - id: {}", id);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        Server.players.remove(id);
-        Server.group.remove(ctx.channel());
-        int length = 8;
-        ByteBuf buf = ctx.alloc().buffer(length + 4);
-        buf.writeInt(length);
-        buf.writeInt(16);
-        buf.writeInt(id);
-        Server.group.writeAndFlush(buf);
+        _00020120_remove_(ctx, id);
+        this.renderer._00011100325_clear(ctx, id);
         logger.info("Player disconnected - id: {}", id);
     }
     public void _0100101001_spawn_(ChannelHandlerContext ctx, PlayedRenderer renderer) {
@@ -52,6 +46,7 @@ public class ConnectedPlayer extends SimpleChannelInboundHandler<ByteBuf> {
         renderer._1111212_map_(ctx);
     }
     public void _00020120_remove_(ChannelHandlerContext ctx, int drop) {
+        Server.group.remove(ctx.channel()); // Дропаем игрока из группы
         Server.players.remove(drop); // Дропаем игрока из списка
     }
 }
